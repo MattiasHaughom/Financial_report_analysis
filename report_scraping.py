@@ -105,27 +105,29 @@ def fetch_report_details(api_url, message_id):
         print(f"Error parsing JSON for message ID {message_id}: {e}")
         return None
 
-
 def download_attachments(message):
-    """Download attachments for a given message."""
+    """Download relevant attachments for a given message."""
     if message['numbAttachments'] > 0:
         for attachment in message['attachments']:
             attachment_id = attachment['id']
             attachment_name = attachment['name']
-            download_url = f"https://api3.oslo.oslobors.no/v1/newsreader/attachment?messageId={message['messageId']}&attachmentId={attachment_id}"
             
-            try:
-                response = requests.get(download_url)
-                response.raise_for_status()
+            # Check if the attachment name indicates it's a financial report
+            if "report" in attachment_name.lower() or "results" in attachment_name.lower() or "account" in attachment_name.lower() or "rapport" in attachment_name.lower():
+                download_url = f"https://api3.oslo.oslobors.no/v1/newsreader/attachment?messageId={message['messageId']}&attachmentId={attachment_id}"
                 
-                # Save the attachment
-                os.makedirs('downloads', exist_ok=True)
-                file_path = os.path.join('downloads', attachment_name)
-                with open(file_path, 'wb') as file:
-                    file.write(response.content)
-                print(f"Downloaded: {attachment_name}")
-            except requests.RequestException as e:
-                print(f"Error downloading attachment {attachment_name}: {e}")
+                try:
+                    response = requests.get(download_url)
+                    response.raise_for_status()
+                    
+                    # Save the attachment
+                    os.makedirs('downloads', exist_ok=True)
+                    file_path = os.path.join('downloads', attachment_name)
+                    with open(file_path, 'wb') as file:
+                        file.write(response.content)
+                    print(f"Downloaded: {attachment_name}")
+                except requests.RequestException as e:
+                    print(f"Error downloading attachment {attachment_name}: {e}")
 
 
 def main():
