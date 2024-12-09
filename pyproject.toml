@@ -1,0 +1,24 @@
+[project]
+name = "Financial_report_analysis"
+version = "1"
+description = "AI analysis of financial reports"
+authors = [
+    {name = "Mattias Haughom", email = "mattias.haughom@gmail.com"},
+]
+dependencies = ["requests>=2.32.3", "beautifulsoup4>=4.12.3", "pip>=24.3.1"]
+requires-python = ">=3.13"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
+
+
+[tool.pdm.scripts]
+m = "python3 report_scraping.py"
+mkm = "python3 main.py"
