@@ -1,10 +1,23 @@
 # Financial Report Processing Script
-This script processes financial PDF reports by extracting relevant pages based on specific keywords and deleting the original files. It is designed to prepare data for AI analysis, which will summarize and store the information for future use.
+This app automates the retrieval, processing, and preparation of financial reports for further analysis.
 
-## Features
-- PDF Processing: Extracts pages from PDF reports that contain keywords such as "highlight", "summary", "key figures", "profit", and "profit margin".
-- File Management: Deletes the original PDF files after extracting the relevant pages to save storage space.
-- Logging: Logs the processing steps and any errors encountered during execution.
+## report_scraping.py
+This script is responsible for fetching financial reports from an API, downloading relevant attachments, and managing the storage of these files.
+
+### Features
+- Fetch Message IDs: Retrieves message IDs from the API based on specific categories and market criteria.
+- Download Attachments: Downloads attachments from the messages that are identified as financial reports.
+- File Management: Deletes files older than a specified number of days to manage storage space.
+- Logging: Logs the operations and any errors encountered during execution.
+
+## process_reports.py
+This script processes the downloaded PDF reports by extracting relevant pages based on specific keywords and deleting the original files.
+
+### Features
+- Extract Relevant Pages: Identifies and extracts pages from PDF reports that contain keywords such as "highlight", "summary", "key figures", "profit", and "profit margin".
+- Save Extracted Pages: Saves the extracted pages into new PDF files.
+- Delete Original Files: Deletes the original PDF files after processing to save storage space.
+
 
 ## Requirements
 - Python 3.x
@@ -15,24 +28,13 @@ This script processes financial PDF reports by extracting relevant pages based o
 pdm init
 ```
 
-## Usage
-1. Setup: Place the PDF reports you want to process in the downloads directory.
-2. Run the Script: Execute the script to process the reports.
-```
-python3 report_scraping.py
-```
-3. Output: The script will create new PDF files containing only the relevant pages in the same directory, prefixed with extracted_.
-
-## Configuration
-- Keywords: Modify the list of keywords in the process_reports function to adjust which pages are extracted.
-- Directory: Change the directory variable in the process_reports function to specify a different directory for input and output files.
 
 ## Future Enhancements
-- AI Analysis Integration
+### AI Analysis Integration
 - Data Extraction: Implement AI models to analyze the extracted data and generate summaries.
 - Storage: Save the AI-generated summaries in a database or file system for future retrieval and analysis.
 - User Interface: Develop a user interface to visualize the analysis results and allow users to interact with the data.
-- Additional Features
+### Additional Features
 - Batch Processing: Enhance the script to process large volumes of reports more efficiently.
 - Parallel Processing: Utilize parallel processing to speed up the extraction and analysis of reports.
 - Advanced Logging: Implement more detailed logging to track the performance and outcomes of the AI analysis.
