@@ -8,21 +8,24 @@ import pandas as pd
 import psycopg
 from ..config.settings import get_settings
 from ..services.llm_factory import LLMFactory
+from ..services.synthesizer import Keywords
 from pydantic import BaseModel
 from openai import OpenAI
-from ..services.synthesizer import Keywords
 from timescale_vector import client
-import nltk
-from nltk.corpus import wordnet
 from typing import List
+import uuid
+import json
 
-# Ensure the necessary NLTK data is downloaded
-nltk.download('punkt_tab')
-nltk.download('wordnet')
 
 
 def expand_with_synonyms(keywords: List[str]) -> List[str]:
     """Expand keywords with synonyms using WordNet."""
+    import nltk
+    from nltk.corpus import wordnet
+
+    nltk.download('wordnet')
+    nltk.download('omw-1.4')
+
     expanded_keywords = set(keywords)
     for keyword in keywords:
         for syn in wordnet.synsets(keyword):
@@ -30,38 +33,47 @@ def expand_with_synonyms(keywords: List[str]) -> List[str]:
                 expanded_keywords.add(lemma.name())
     return list(expanded_keywords)
 
+
 class VectorStore:
     """A class for managing vector operations and database interactions."""
 
     def __init__(self):
         """Initialize the VectorStore with settings, OpenAI client, and Timescale Vector client."""
         self.settings = get_settings()
+
+        # Initialize OpenAI client
         self.openai_client = OpenAI(api_key=self.settings.openai.api_key)
         self.embedding_model = self.settings.openai.embedding_model
+
+        # Initialize Cohere client
         self.cohere_client = cohere.ClientV2(api_key=self.settings.cohere.api_key)
+
+        # Store vector settings
         self.vector_settings = self.settings.vector_store
-        self.vec_client = client.Sync(
+
+        # Initialize Timescale Vector clients for reports and analysis
+        self.reports_vec_client = client.Sync(
             self.settings.database.service_url,
-            self.vector_settings.reports_table,
+            "reports",
             self.vector_settings.embedding_dimensions,
-            time_partition_interval=self.vector_settings.time_partition_interval,
+            time_partition_interval=self.vector_settings.time_partition_interval
         )
 
-    def create_keyword_search_index(self):
-        """Create a GIN index for keyword search if it doesn't exist."""
-        index_name = f"idx_{self.vector_settings.table_name}_contents_gin"
-        create_index_sql = f"""
-        CREATE INDEX IF NOT EXISTS {index_name}
-        ON {self.vector_settings.table_name} USING gin(to_tsvector('english', contents));
-        """
-        try:
-            with psycopg.connect(self.settings.database.service_url) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(create_index_sql)
-                    conn.commit()
-                    logging.info(f"GIN index '{index_name}' created or already exists.")
-        except Exception as e:
-            logging.error(f"Error while creating GIN index: {str(e)}")
+        self.analysis_vec_client = client.Sync(
+            self.settings.database.service_url,
+            "analysis",
+            self.vector_settings.embedding_dimensions,
+            time_partition_interval=self.vector_settings.time_partition_interval
+        )
+
+        # Initialize or create the company table separately
+        self.create_company_table()
+
+
+
+#------------------------------------------------------------------------------------------------
+# Embedding
+#------------------------------------------------------------------------------------------------
 
     def get_embedding(self, text: str) -> List[float]:
         """
@@ -87,19 +99,81 @@ class VectorStore:
         logging.info(f"Embedding generated in {elapsed_time:.3f} seconds")
         return embedding
 
-    def create_tables(self) -> None:
+
+#------------------------------------------------------------------------------------------------
+# Get existing message IDs
+#------------------------------------------------------------------------------------------------
+
+    def get_existing_message_ids(self, message_ids: List[int]) -> List[int]:
+        """
+        Retrieve existing message IDs from the database to filter out already processed reports.
+        """
+        sql = """
+        SELECT (metadata->>'messageId')::integer AS messageId
+        FROM reports
+        WHERE (metadata->>'messageId')::integer = ANY(%s);
+        """
+        try:
+            with psycopg.connect(self.settings.database.service_url) as conn:
+                df = pd.read_sql(sql, conn, params=(message_ids,))
+                existing_ids = df['messageId'].tolist()
+                return existing_ids
+        except Exception as e:
+            logging.error(f"Error retrieving existing message IDs: {e}")
+            return []
+
+#------------------------------------------------------------------------------------------------
+# Index operations
+#------------------------------------------------------------------------------------------------
+    def create_reports_table(self) -> None:
         """Create the necessary tablesin the database"""
-        self.vec_client.create_tables()
+        self.reports_vec_client.create_tables()
 
-    def create_index(self) -> None:
-        """Create the StreamingDiskANN index to spseed up similarity search"""
-        self.vec_client.create_embedding_index(client.DiskAnnIndex())
+    def create_analysis_table(self) -> None:
+        """Create the necessary tablesin the database"""
+        self.analysis_vec_client.create_tables()
 
-    def drop_index(self) -> None:
+    def create_reports_index(self) -> None:
+        """Create the DiskANN indexes for the reports table."""
+        self.reports_vec_client.create_embedding_index(client.DiskAnnIndex())
+        logging.info(f"DiskANN index created for '{self.vector_settings.reports_table}'.")
+
+    def create_analysis_index(self) -> None:
+        """Create the DiskANN indexes for the analysis table."""
+        self.analysis_vec_client.create_embedding_index(client.DiskAnnIndex())
+        logging.info(f"DiskANN index created for '{self.vector_settings.analysis_table}'.")
+
+    def drop_index_reports(self) -> None:
         """Drop the StreamingDiskANN index in the database"""
-        self.vec_client.drop_embedding_index()
+        self.reports_vec_client.drop_embedding_index()
+    
+    def drop_index_analysis(self) -> None:
+        """Drop the StreamingDiskANN index in the database"""
+        self.analysis_vec_client.drop_embedding_index()
 
-    def upsert(self, df: pd.DataFrame) -> None:
+    def create_keyword_search_indexes(self) -> None:
+        """Create GIN indexes for keyword search on both tables."""
+        for table_name in [self.vector_settings.reports_table, self.vector_settings.analysis_table]:
+            index_name = f"idx_{table_name}_contents_gin"
+            create_index_sql = f"""
+            CREATE INDEX IF NOT EXISTS {index_name}
+            ON {table_name} USING gin(to_tsvector('english', contents));
+            """
+            try:
+                with psycopg.connect(self.settings.database.service_url) as conn:
+                    with conn.cursor() as cur:
+                        cur.execute(create_index_sql)
+                        conn.commit()
+                        logging.info(f"GIN index '{index_name}' created or already exists on '{table_name}'.")
+            except Exception as e:
+                logging.error(f"Error while creating GIN index on '{table_name}': {str(e)}")
+
+
+#------------------------------------------------------------------------------------------------
+# Upsert methods
+#------------------------------------------------------------------------------------------------
+
+    def upsert_reports(self, df: pd.DataFrame) -> None:
         """
         Insert or update records in the database from a pandas DataFrame.
 
@@ -108,170 +182,157 @@ class VectorStore:
                 Expected columns: id, metadata, contents, embedding
         """
         records = df.to_records(index=False)
-        self.vec_client.upsert(list(records))
+        self.reports_vec_client.upsert(list(records))
+        print(self.vector_settings.reports_table)
         logging.info(
-            f"Inserted {len(df)} records into {self.vector_settings.table_name}"
+            f"Inserted {len(df)} records into {self.vector_settings.reports_table}"
         )
 
+    def upsert_analysis(self, df: pd.DataFrame) -> None:
+        """
+        Insert or update records in the database from a pandas DataFrame.
+
+        Args:
+            df: A pandas DataFrame containing the data to insert or update.
+                Expected columns: id, metadata, contents, embedding
+        """
+        records = df.to_dict(orient='records')
+        self.analysis_vec_client.upsert(list(records))
+        logging.info(
+            f"Inserted {len(df)} records into {self.vector_settings.analysis_table}"
+        )
+
+    def create_company_table(self):
+        """Create the company table if it doesn't exist."""
+        with psycopg.connect(self.settings.database.service_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(f"""
+                    CREATE TABLE IF NOT EXISTS {self.vector_settings.company_table} (
+                        id SERIAL PRIMARY KEY,
+                        name TEXT UNIQUE NOT NULL
+                    );
+                """)
+                conn.commit()
+                logging.info(f"Company table '{self.vector_settings.company_table}' is ready.")
+
+
+    def get_or_create_company(self, issuer_sign: str) -> str:
+        """
+        Get or create a company record in the database.
+
+        Args:
+            issuer_sign: The company ticker symbol.
+
+        Returns:
+            The company ID as a string.
+        """
+        with psycopg.connect(self.settings.database.service_url) as conn:
+            with conn.cursor() as cur:
+                # Check if company exists
+                cur.execute(
+                    f"SELECT id FROM {self.vector_settings.company_table} WHERE name = %s",
+                    (issuer_sign,)
+                )
+                result = cur.fetchone()
+
+                if result:
+                    return str(result[0])
+
+                # Insert new company
+                cur.execute(
+                    f"INSERT INTO {self.vector_settings.company_table} (name) VALUES (%s) RETURNING id",
+                    (issuer_sign,)
+                )
+                company_id = cur.fetchone()[0]
+                conn.commit()
+                return str(company_id)
+
+
+#------------------------------------------------------------------------------------------------
+# Get metadata
+#------------------------------------------------------------------------------------------------
+    
+    def get_report_metadata(self, report_id: str) -> Tuple[str, str]:
+        """
+        Retrieve company_id and report_date for a given report_id.
+
+        Args:
+            report_id: The report ID.
+
+        Returns:
+            A tuple of (company_id, report_date).
+        """
+        query = f"""
+        SELECT 
+            metadata->>'company_id' AS company_id, 
+            metadata->>'report_date' AS report_date
+        FROM {self.vector_settings.reports_table}
+        WHERE metadata->>'report_id' = %s
+        LIMIT 1;
+        """
+        with psycopg.connect(self.settings.database.service_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, (report_id,))
+                result = cur.fetchone()
+                if result:
+                    return result[0], result[1]
+                else:
+                    raise ValueError(f"Report ID {report_id} not found.")
+
+    def get_reports_metadata(self, report_ids: List[str]) -> pd.DataFrame:
+        """
+        Retrieve company_id and report_date for multiple report_ids.
+
+        Args:
+            report_ids: List of report IDs.
+
+        Returns:
+            A pandas DataFrame with columns: report_id, company_id, report_date
+        """
+        sql = f"""
+        SELECT 
+            metadata->>'report_id' AS report_id,
+            metadata->>'company_id' AS company_id, 
+            metadata->>'report_date' AS report_date
+        FROM {self.vector_settings.reports_table}
+        WHERE metadata->>'report_id' = ANY(%s);
+        """
+        with psycopg.connect(self.settings.database.service_url) as conn:
+            df = pd.read_sql(sql, conn, params=(report_ids,))
+        return df
+
+#------------------------------------------------------------------------------------------------
+# Semantic search
+#------------------------------------------------------------------------------------------------
     def semantic_search(
         self,
         query: str,
         limit: int = 5,
         metadata_filter: Union[dict, List[dict]] = None,
-        predicates: Optional[client.Predicates] = None,
-        time_range: Optional[Tuple[datetime, datetime]] = None,
+        table_name: str = 'reports',
         return_dataframe: bool = True,
-    ) -> Union[List[Tuple[Any, ...]], pd.DataFrame]:
-        """
-        Query the vector database for similar embeddings based on input text.
-
-        More info:
-            https://github.com/timescale/docs/blob/latest/ai/python-interface-for-pgvector-and-timescale-vector.md
-
-        Args:
-            query: The input text to search for.
-            limit: The maximum number of results to return.
-            metadata_filter: A dictionary or list of dictionaries for equality-based metadata filtering.
-            predicates: A Predicates object for complex metadata filtering.
-                - Predicates objects are defined by the name of the metadata key, an operator, and a value.
-                - Operators: ==, !=, >, >=, <, <=
-                - & is used to combine multiple predicates with AND operator.
-                - | is used to combine multiple predicates with OR operator.
-            time_range: A tuple of (start_date, end_date) to filter results by time.
-            return_dataframe: Whether to return results as a DataFrame (default: True).
-
-        Returns:
-            Either a list of tuples or a pandas DataFrame containing the search results.
-
-        Basic Examples:
-            Basic search:
-                vector_store.semantic_search("What are your shipping options?")
-            Search with metadata filter:
-                vector_store.semantic_search("Shipping options", metadata_filter={"category": "Shipping"})
-        
-        Predicates Examples:
-            Search with predicates:
-                vector_store.semantic_search("Pricing", predicates=client.Predicates("price", ">", 100))
-            Search with complex combined predicates:
-                complex_pred = (client.Predicates("category", "==", "Electronics") & client.Predicates("price", "<", 1000)) | \
-                               (client.Predicates("category", "==", "Books") & client.Predicates("rating", ">=", 4.5))
-                vector_store.semantic_search("High-quality products", predicates=complex_pred)
-        
-        Time-based filtering:
-            Search with time range:
-                vector_store.semantic_search("Recent updates", time_range=(datetime(2024, 1, 1), datetime(2024, 1, 31)))
-        """
+    ) -> Union[List[dict], pd.DataFrame]:
+        """Perform semantic search on the specified table."""
         query_embedding = self.get_embedding(query)
-
-        start_time = time.time()
+        vec_client = self.reports_vec_client if table_name == 'reports' else self.analysis_vec_client
 
         search_args = {
-            "limit": limit,
+            "query_embedding": query_embedding,
+            "top_k": limit,
+            "metadata": metadata_filter
         }
 
-        if metadata_filter:
-            search_args["filter"] = metadata_filter
-
-        if predicates:
-            search_args["predicates"] = predicates
-
-        if time_range:
-            start_date, end_date = time_range
-            search_args["uuid_time_filter"] = client.UUIDTimeRange(start_date, end_date)
-
-        results = self.vec_client.search(query_embedding, **search_args)
-        elapsed_time = time.time() - start_time
-
-        self._log_search_time("Vector", elapsed_time)
+        results = vec_client.search(query_embedding, **search_args)
+        logging.info(f"Semantic search on '{table_name}' completed.")
 
         if return_dataframe:
-            return self._create_dataframe_from_results(results)
+            return pd.DataFrame(results)
         else:
             return results
 
-    def _create_dataframe_from_results(
-        self,
-        results: List[Tuple[Any, ...]],
-    ) -> pd.DataFrame:
-        """
-        Create a pandas DataFrame from the search results.
-
-        Args:
-            results: A list of tuples containing the search results.
-
-        Returns:
-            A pandas DataFrame containing the formatted search results.
-        """
-        # Convert results to DataFrame
-        df = pd.DataFrame(
-            results, columns=["id", "metadata", "content", "embedding", "distance"]
-        )
-
-        # Expand metadata column
-        df = pd.concat(
-            [df.drop(["metadata"], axis=1), df["metadata"].apply(pd.Series)], axis=1
-        )
-
-        # Convert id to string for better readability
-        df["id"] = df["id"].astype(str)
-
-        return df
-
-    def delete(
-        self,
-        ids: List[str] = None,
-        metadata_filter: dict = None,
-        delete_all: bool = False,
-    ) -> None:
-        """Delete records from the vector database.
-
-        Args:
-            ids (List[str], optional): A list of record IDs to delete.
-            metadata_filter (dict, optional): A dictionary of metadata key-value pairs to filter records for deletion.
-            delete_all (bool, optional): A boolean flag to delete all records.
-
-        Raises:
-            ValueError: If no deletion criteria are provided or if multiple criteria are provided.
-
-        Examples:
-            Delete by IDs:
-                vector_store.delete(ids=["8ab544ae-766a-11ef-81cb-decf757b836d"])
-
-            Delete by metadata filter:
-                vector_store.delete(metadata_filter={"category": "Shipping"})
-
-            Delete all records:
-                vector_store.delete(delete_all=True)
-        """
-        if sum(bool(x) for x in (ids, metadata_filter, delete_all)) != 1:
-            raise ValueError(
-                "Provide exactly one of: ids, metadata_filter, or delete_all"
-            )
-
-        if delete_all:
-            self.vec_client.delete_all()
-            logging.info(f"Deleted all records from {self.vector_settings.table_name}")
-        elif ids:
-            self.vec_client.delete_by_ids(ids)
-            logging.info(
-                f"Deleted {len(ids)} records from {self.vector_settings.table_name}"
-            )
-        elif metadata_filter:
-            self.vec_client.delete_by_metadata(metadata_filter)
-            logging.info(
-                f"Deleted records matching metadata filter from {self.vector_settings.table_name}"
-            )
-
-    def _log_search_time(self, search_type: str, elapsed_time: float) -> None:
-        """
-        Log the time taken for a search operation.
-
-        Args:
-            search_type: The type of search performed (e.g., 'Vector', 'Keyword').
-            elapsed_time: The time taken for the search operation in seconds.
-        """
-        logging.info(f"{search_type} search completed in {elapsed_time:.3f} seconds")
-
+#------------------------------------------------------------------------------------------------
+# Keyword search
+#------------------------------------------------------------------------------------------------
     def extract_keywords_with_llm(self, query: str) -> List[str]:
         """Extract keywords from the query using an LLM."""
         # Set the OpenAI API key
@@ -305,6 +366,7 @@ class VectorStore:
 
         #keywords = response.choices[0].message.parsed.content
         return keywords
+    
 
     def keyword_search(
         self, query: str, limit: int = 5, return_dataframe: bool = True
@@ -337,7 +399,7 @@ class VectorStore:
 
         search_sql = f"""
         SELECT id, contents, ts_rank_cd(to_tsvector('english', contents), query) as rank
-        FROM {self.vector_settings.table_name}, to_tsquery('english', %s) query
+        FROM {self.vector_settings.reports_table}, to_tsquery('english', %s) query
         WHERE to_tsvector('english', contents) @@ query
         ORDER BY rank DESC
         LIMIT %s
@@ -359,6 +421,10 @@ class VectorStore:
             return df
         else:
             return results
+
+#------------------------------------------------------------------------------------------------
+# Hybrid search and reranking
+#------------------------------------------------------------------------------------------------
 
     def hybrid_search(
         self,
@@ -447,95 +513,96 @@ class VectorStore:
         )
 
         return reranked_df.sort_values("relevance_score", ascending=False)
+    
+#------------------------------------------------------------------------------------------------
+# Search helper functions
+#------------------------------------------------------------------------------------------------
 
-    def upsert_report(self, report_data: dict) -> None:
+    def _create_dataframe_from_results(
+        self,
+        results: List[Tuple[Any, ...]],
+    ) -> pd.DataFrame:
         """
-        Insert or update a report record in the database.
+        Create a pandas DataFrame from the search results.
 
         Args:
-            report_data: A dictionary containing the report data.
-        """
-        # Extract data
-        company_id = self.get_or_create_company(report_data['issuerSign'])
-        report_id = report_data['id']
-        report_date = report_data['publishedTime']
-        raw_text = report_data['raw_text']
-        embedding = self.get_embedding(raw_text)
-
-        # Insert into reports table
-        with psycopg.connect(self.settings.database.service_url) as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    f"""
-                    INSERT INTO {self.vector_settings.reports_table} (id, company_id, report_date, raw_text, embedding)
-                    VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (id) DO UPDATE SET
-                    company_id = EXCLUDED.company_id,
-                    report_date = EXCLUDED.report_date,
-                    raw_text = EXCLUDED.raw_text,
-                    embedding = EXCLUDED.embedding;
-                    """,
-                    (report_id, company_id, report_date, raw_text, embedding)
-                )
-                conn.commit()
-
-    def get_or_create_company(self, issuer_sign: str) -> int:
-        """
-        Get or create a company record in the database.
-
-        Args:
-            issuer_sign: The company ticker symbol.
+            results: A list of tuples containing the search results.
 
         Returns:
-            The company ID.
+            A pandas DataFrame containing the formatted search results.
         """
-        with psycopg.connect(self.settings.database.service_url) as conn:
-            with conn.cursor() as cur:
-                # Check if company exists
-                cur.execute(
-                    f"SELECT id FROM {self.vector_settings.company_table} WHERE name = %s",
-                    (issuer_sign,)
-                )
-                result = cur.fetchone()
+        # Convert results to DataFrame
+        df = pd.DataFrame(
+            results, columns=["id", "metadata", "content", "embedding", "distance"]
+        )
 
-                if result:
-                    return result[0]
+        # Expand metadata column
+        df = pd.concat(
+            [df.drop(["metadata"], axis=1), df["metadata"].apply(pd.Series)], axis=1
+        )
 
-                # Insert new company
-                cur.execute(
-                    f"INSERT INTO {self.vector_settings.company_table} (name) VALUES (%s) RETURNING id",
-                    (issuer_sign,)
-                )
-                company_id = cur.fetchone()[0]
-                conn.commit()
-                return company_id
+        # Convert id to string for better readability
+        df["id"] = df["id"].astype(str)
 
-    def upsert_analysis(self, report_id: int, analysis_text: str, summary_text: str) -> None:
+        return df
+
+
+    def _log_search_time(self, search_type: str, elapsed_time: float) -> None:
         """
-        Insert or update an analysis record in the database.
+        Log the time taken for a search operation.
 
         Args:
-            report_id: The ID of the report being analyzed.
-            analysis_text: The detailed AI analysis text.
-            summary_text: The AI-generated summary text.
+            search_type: The type of search performed (e.g., 'Vector', 'Keyword').
+            elapsed_time: The time taken for the search operation in seconds.
         """
-        # Generate embeddings for analysis and summary texts
-        analysis_embedding = self.get_embedding(analysis_text)
-        summary_embedding = self.get_embedding(summary_text)
+        logging.info(f"{search_type} search completed in {elapsed_time:.3f} seconds")
 
-        # Insert or update the analysis record in the database
-        with psycopg.connect(self.settings.database.service_url) as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    f"""
-                    INSERT INTO {self.vector_settings.analysis_table} (report_id, analysis_text, embedding_analysis, summary_text, embedding_summary)
-                    VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (report_id) DO UPDATE SET
-                    analysis_text = EXCLUDED.analysis_text,
-                    embedding_analysis = EXCLUDED.embedding_analysis,
-                    summary_text = EXCLUDED.summary_text,
-                    embedding_summary = EXCLUDED.embedding_summary;
-                    """,
-                    (report_id, analysis_text, analysis_embedding, summary_text, summary_embedding)
-                )
-                conn.commit()
+
+#------------------------------------------------------------------------------------------------
+# Delete
+#------------------------------------------------------------------------------------------------
+
+    def delete(
+        self,
+        ids: List[str] = None,
+        metadata_filter: dict = None,
+        delete_all: bool = False,
+    ) -> None:
+        """Delete records from the vector database.
+
+        Args:
+            ids (List[str], optional): A list of record IDs to delete.
+            metadata_filter (dict, optional): A dictionary of metadata key-value pairs to filter records for deletion.
+            delete_all (bool, optional): A boolean flag to delete all records.
+
+        Raises:
+            ValueError: If no deletion criteria are provided or if multiple criteria are provided.
+
+        Examples:
+            Delete by IDs:
+                vector_store.delete(ids=["8ab544ae-766a-11ef-81cb-decf757b836d"])
+
+            Delete by metadata filter:
+                vector_store.delete(metadata_filter={"category": "Shipping"})
+
+            Delete all records:
+                vector_store.delete(delete_all=True)
+        """
+        if sum(bool(x) for x in (ids, metadata_filter, delete_all)) != 1:
+            raise ValueError(
+                "Provide exactly one of: ids, metadata_filter, or delete_all"
+            )
+
+        if delete_all:
+            self.vec_client.delete_all()
+            logging.info(f"Deleted all records from {self.vector_settings.reports_table}")
+        elif ids:
+            self.vec_client.delete_by_ids(ids)
+            logging.info(
+                f"Deleted {len(ids)} records from {self.vector_settings.reports_table}"
+            )
+        elif metadata_filter:
+            self.vec_client.delete_by_metadata(metadata_filter)
+            logging.info(
+                f"Deleted records matching metadata filter from {self.vector_settings.reports_table}"
+            )

@@ -50,6 +50,12 @@ class DatabaseSettings(BaseModel):
     service_url: str = Field(default_factory=lambda: os.getenv("TIMESCALE_SERVICE_URL"))
 
 
+class TableSchema(BaseModel):
+    """Base model for table schemas"""
+    columns: dict[str, str]
+    description: str = ""
+
+
 class VectorStoreSettings(BaseModel):
     """Settings for the VectorStore."""
 

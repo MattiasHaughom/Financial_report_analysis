@@ -25,6 +25,12 @@ class SynthesizedResponse(BaseModel):
     )
 
 
+# Define desired output structure of keyword checking 
+class Keywords(BaseModel):
+    content: list[str] = Field(description="List of keywords")
+
+
+
 class Synthesizer:
     SYSTEM_PROMPT = """
     # Role and Purpose
