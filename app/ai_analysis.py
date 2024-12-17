@@ -151,11 +151,12 @@ async def analyze_reports():
                 'embedding': vector_store.get_embedding(result.data.analysis_text)
             }
 
-            send_email(
+            email_response = send_email(
                 subject=f"Financial Analysis Summaries for {company_name}",
                 body=result.data.analysis_text,
                 to_email="mattias.haughom@gmail.com"
             )
+            logging.info(f"Email sent to {company_name}: {email_response}")
 
             vector_store.upsert_analysis(pd.DataFrame([analysis_record]))
             logging.info(f"Analysis saved for report ID {doc_id}")

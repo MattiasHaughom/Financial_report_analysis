@@ -36,10 +36,11 @@ def send_email(subject: str, body: str, to_email: str):
 
     # Load environment variables from the specified .env file
     load_dotenv(dotenv_path)
+
     return requests.post(
         "https://api.mailgun.net/v3/sandboxa87742fadda649ab9e3350437d05cf58.mailgun.org/messages",
         auth=("api", os.getenv("MAILGUN_API_KEY")),
-        data={"from": "AI analyser <mailgun@sandboxa87742fadda649ab9e3350437d05cf58.mailgun.org>",
-                "to": [to_email],
-                "subject": subject,
-                "text": body})
+        data={"from": "AI analysis <mailgun@sandboxa87742fadda649ab9e3350437d05cf58.mailgun.org>",
+            "to": to_email,
+            "subject": subject,
+            "text": body})
