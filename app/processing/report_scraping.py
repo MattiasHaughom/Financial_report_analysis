@@ -172,7 +172,7 @@ def save_reports_to_file(reports: List[dict], ticker_symbol: str, filename: str 
         json.dump(reports, file, indent=4)
     logging.info(f"Saved reports metadata to {filepath}")
 
-def main():
+def main() -> bool:
     """Main function to execute the script."""
     # API URLs
     list_api_url = "https://api3.oslo.oslobors.no/v1/newsreader/list"
@@ -200,6 +200,8 @@ def main():
     reports = fetch_message_ids(list_api_url, params)
     logging.info(f"Fetched {len(reports)} reports from the announcements API.")
 
+    new_reports_found = False
+
     # For each report, fetch attachment details and download attachments
     for report in reports:
         message_id = report['messageId']
@@ -214,6 +216,8 @@ def main():
 
         # Download attachments
         downloaded_files = download_attachments(report, downloads_dir)
+        if downloaded_files:
+            new_reports_found = True  # Set to True if any new files are downloaded
         report['downloadedFiles'] = downloaded_files  # Optionally track downloaded files
 
     # Save the updated reports with attachment details to metadata JSON
@@ -224,6 +228,8 @@ def main():
         logging.info(f"Processed and saved {len(reports)} reports for ticker {ticker_symbol}.")
     else:
         logging.info("No reports fetched from the API.")
+
+    return new_reports_found
 
 if __name__ == "__main__":
     main()

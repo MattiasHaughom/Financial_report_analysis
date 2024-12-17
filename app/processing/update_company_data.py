@@ -45,6 +45,9 @@ def upsert_company_data():
             conn.commit()
             logging.info(f"Upserted {len(df)} records into company table.")
 
+def main():
+    upsert_company_data()
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    upsert_company_data() 
+    main() 

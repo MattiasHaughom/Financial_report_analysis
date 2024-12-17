@@ -163,5 +163,10 @@ async def analyze_reports():
         except Exception as e:
             logging.error(f"Error processing doc_id {doc_id}: {e}")
 
-if __name__ == '__main__':
+# Encapsulate the asyncio run in a main function
+def main():
     asyncio.run(analyze_reports())
+
+# Replace the existing asyncio call with a main function call
+if __name__ == '__main__':
+    main()

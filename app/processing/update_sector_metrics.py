@@ -53,6 +53,9 @@ def update_sector_metrics():
             conn.commit()
             logging.info(f"Upserted metrics for {len(SECTOR_METRICS)} sectors.")
 
+def main():
+    update_sector_metrics()
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    update_sector_metrics()
+    main()

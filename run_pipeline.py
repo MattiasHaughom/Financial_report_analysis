@@ -22,9 +22,13 @@ def run_weekly_tasks():
 def run_daily_tasks():
     """Run tasks that need to be executed daily."""
     logging.info("Running daily tasks...")
-    report_scraping()
-    process_reports()
-    logging.info("Daily tasks completed.")
+    new_reports = report_scraping()
+    if new_reports:
+        logging.info("New reports found. Processing reports...")
+        process_reports()
+        run_ai_analysis()
+    else:
+        logging.info("No new reports found. Skipping processing and AI analysis.")
 
 def run_ai_analysis():
     """Run AI analysis and send emails."""
@@ -33,14 +37,11 @@ def run_ai_analysis():
     logging.info("AI analysis completed.")
 
 def main():
-    # Schedule weekly tasks
-    schedule.every().monday.at("00:00").do(run_weekly_tasks)
+    # Schedule weekly tasks to run every Monday at 10 AM CET
+    schedule.every().monday.at("10:00").do(run_weekly_tasks)
 
-    # Schedule daily tasks
-    schedule.every().day.at("01:00").do(run_daily_tasks)
-
-    # Schedule AI analysis
-    schedule.every().day.at("02:00").do(run_ai_analysis)
+    # Schedule daily tasks to run every day at 10 AM CET
+    schedule.every().day.at("10:00").do(run_daily_tasks)
 
     logging.info("Scheduler started. Waiting for tasks to run...")
 
