@@ -161,7 +161,7 @@ def save_reports_to_file(reports: List[dict], ticker_symbol: str, filename: str 
     """Save the collected reports data to a JSON file with the ticker symbol in the file name."""
     # Get project root directory
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    metadata_path = os.path.join(project_root, 'downloads', 'processed', 'metadata')
+    metadata_path = os.path.join(project_root, 'data', 'processed', 'metadata')
 
     # Ensure metadata directory exists
     os.makedirs(metadata_path, exist_ok=True)
@@ -184,9 +184,9 @@ def main():
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
     # Set up directory paths
-    downloads_dir = os.path.join(project_root, 'downloads', 'raw')       # Raw PDFs
-    processed_reports_dir = os.path.join(project_root, 'downloads', 'processed', 'reports')  # Processed PDFs
-    metadata_dir = os.path.join(project_root, 'downloads', 'processed', 'metadata')        # Metadata JSON files
+    downloads_dir = os.path.join(project_root, 'data', 'raw')       # Raw PDFs
+    processed_reports_dir = os.path.join(project_root, 'data', 'processed', 'reports')  # Processed PDFs
+    metadata_dir = os.path.join(project_root, 'data', 'processed', 'metadata')        # Metadata JSON files
 
     # Ensure directories exist
     os.makedirs(downloads_dir, exist_ok=True)

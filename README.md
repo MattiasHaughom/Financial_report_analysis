@@ -1,22 +1,42 @@
 # Financial Report Processing Script
-This app automates the retrieval, processing, and preparation of financial reports for further analysis.
 
-## report_scraping.py
-This script is responsible for fetching financial reports from an API, downloading relevant attachments, and managing the storage of these files.
+## Overall Application Structure
 
+### report_scraping.py
+* Purpose: Download reports from NewsWeb for Norwegian companies.
+* Logic:
+    * Connect to the NewsWeb API to fetch the latest reports.
+    * Filter reports based on desired criteria (e.g., category, market).
+    * Download report attachments (PDFs) and save metadata.
+    * Delete old files to manage storage.
+
+### process_reports.py
+* Purpose: Process the downloaded reports to extract key information.
+* Logic:
+    * Load report metadata and process each report.
+    * Extract relevant pages from PDFs (e.g., using keyword searches).
+    * Convert PDFs to text using PDF parsers.
+    * Chunk the extracted text for embedding.
+    * Generate embeddings for each text chunk.
+    * Upsert text, embeddings, and metadata into the reports table in your database.
+
+### ai_analysis.py
+* Purpose: Analyze processed reports using AI models guided by sector-specific metrics.
+* Logic:
+    * Fetch new reports from the reports table that need analysis.
+    * For each report:
+        * Retrieve company information from the company table, including sector.
+        * Retrieve sector-specific metrics from the sector_metrics table.
+        * Construct a detailed prompt incorporating sector metrics and company data.
+        * Use pydantic_ai to define structured prompts and expected response models.
+        * Generate AI analysis using the model and save the analysis, along with its embedding, into the analysis table.
+
+   
 ### Features
 - Fetch Message IDs: Retrieves message IDs from the API based on specific categories and market criteria.
 - Download Attachments: Downloads attachments from the messages that are identified as financial reports.
 - File Management: Deletes files older than a specified number of days to manage storage space.
 - Logging: Logs the operations and any errors encountered during execution.
-
-## process_reports.py
-This script processes the downloaded PDF reports by extracting relevant pages based on specific keywords and deleting the original files.
-
-### Features
-- Extract Relevant Pages: Identifies and extracts pages from PDF reports that contain keywords such as "highlight", "summary", "key figures", "profit", and "profit margin".
-- Save Extracted Pages: Saves the extracted pages into new PDF files.
-- Delete Original Files: Deletes the original PDF files after processing to save storage space.
 
 
 ## Requirements

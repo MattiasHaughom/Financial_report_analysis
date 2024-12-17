@@ -1,0 +1,519 @@
+{
+    "Industrial Transportation": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Revenue per Ton-Mile",
+            "Fuel Cost per Mile",
+            "Return on Assets (ROA)"
+        ],
+        "operational_metrics": [
+            "Load Factor",
+            "On-Time Delivery Rate",
+            "Fleet Utilization Rate",
+            "Average Transit Time"
+        ]
+    },
+    "Leisure Goods": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Inventory Turnover",
+            "Revenue per Product Line",
+            "Return on Equity (ROE)"
+        ],
+        "operational_metrics": [
+            "Customer Satisfaction Score",
+            "Brand Recognition",
+            "Product Return Rate",
+            "Market Share"
+        ]
+    },
+    "Banks": {
+        "financial_metrics": [
+            "Net Interest Margin (NIM)",
+            "Return on Equity (ROE)",
+            "Cost-to-Income Ratio",
+            "Loan-to-Deposit Ratio"
+        ],
+        "operational_metrics": [
+            "Non-Performing Loan Ratio",
+            "Customer Retention Rate",
+            "Branch Efficiency",
+            "Digital Transaction Volume"
+        ]
+    },
+    "Investment Banking and Brokerage Services": {
+        "financial_metrics": [
+            "Revenue per Employee",
+            "Return on Equity (ROE)",
+            "Cost-to-Income Ratio",
+            "Assets Under Management (AUM)"
+        ],
+        "operational_metrics": [
+            "Deal Volume",
+            "Client Acquisition Rate",
+            "Trading Volume",
+            "Compliance Breach Rate"
+        ]
+    },
+    "Industrial Support Services": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Revenue Growth Rate",
+            "Return on Capital Employed (ROCE)",
+            "Cost of Goods Sold (COGS)"
+        ],
+        "operational_metrics": [
+            "Service Delivery Time",
+            "Customer Satisfaction Score",
+            "Contract Renewal Rate",
+            "Workforce Utilization Rate"
+        ]
+    },
+    "Construction and Materials": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Return on Capital Employed (ROCE)",
+            "Debt-to-Equity Ratio",
+            "Revenue per Project"
+        ],
+        "operational_metrics": [
+            "Project Completion Rate",
+            "Safety Incident Rate",
+            "Material Waste Percentage",
+            "Labor Productivity"
+        ]
+    },
+    "Waste and Disposal Services": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Revenue per Ton of Waste",
+            "Return on Assets (ROA)",
+            "Cost per Ton of Waste Processed"
+        ],
+        "operational_metrics": [
+            "Recycling Rate",
+            "Customer Satisfaction Score",
+            "Service Coverage Area",
+            "Compliance with Environmental Regulations"
+        ]
+    },
+    "Electronic and Electrical Equipment": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Inventory Turnover",
+            "Return on Assets (ROA)",
+            "Revenue per Product Line"
+        ],
+        "operational_metrics": [
+            "Product Defect Rate",
+            "Time to Market",
+            "Customer Satisfaction Score",
+            "Supplier Lead Time"
+        ]
+    },
+    "Oil, Gas and Coal": {
+        "financial_metrics": [
+            "EBITDA Margin",
+            "Return on Capital Employed (ROCE)",
+            "Operating Cost per Barrel",
+            "Net Profit Margin"
+        ],
+        "operational_metrics": [
+            "Production Volume",
+            "Reserve Replacement Ratio",
+            "Safety Incident Rate",
+            "Carbon Emissions"
+        ]
+    },
+    "Food Producers": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Inventory Turnover",
+            "Revenue per Product Line",
+            "Return on Equity (ROE)"
+        ],
+        "operational_metrics": [
+            "Product Recall Rate",
+            "Supply Chain Efficiency",
+            "Customer Satisfaction Score",
+            "Market Share"
+        ]
+    },
+    "Electricity": {
+        "financial_metrics": [
+            "EBITDA Margin",
+            "Return on Assets (ROA)",
+            "Cost per Megawatt Hour",
+            "Revenue per Customer"
+        ],
+        "operational_metrics": [
+            "Grid Reliability",
+            "Customer Satisfaction Score",
+            "Renewable Energy Percentage",
+            "System Losses"
+        ]
+    },
+    "Precious Metals and Mining": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Return on Capital Employed (ROCE)",
+            "Cost per Ounce",
+            "Revenue per Mine"
+        ],
+        "operational_metrics": [
+            "Ore Grade",
+            "Safety Incident Rate",
+            "Mine Life",
+            "Environmental Compliance"
+        ]
+    },
+    "Industrial Engineering": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Return on Capital Employed (ROCE)",
+            "Revenue per Project",
+            "Debt-to-Equity Ratio"
+        ],
+        "operational_metrics": [
+            "Project Completion Rate",
+            "Innovation Rate",
+            "Customer Satisfaction Score",
+            "Workforce Utilization Rate"
+        ]
+    },
+    "Personal Care, Drug and Grocery Stores": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Inventory Turnover",
+            "Revenue per Square Foot",
+            "Return on Equity (ROE)"
+        ],
+        "operational_metrics": [
+            "Customer Satisfaction Score",
+            "Product Return Rate",
+            "Market Share",
+            "Store Foot Traffic"
+        ]
+    },
+    "Pharmaceuticals and Biotechnology": {
+        "financial_metrics": [
+            "R&D Spending as a Percentage of Revenue",
+            "Gross Margin",
+            "Return on Assets (ROA)",
+            "Revenue per Product"
+        ],
+        "operational_metrics": [
+            "Drug Approval Rate",
+            "Clinical Trial Success Rate",
+            "Time to Market",
+            "Patent Expiry Impact"
+        ]
+    },
+    "Household Goods and Home Construction": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Return on Capital Employed (ROCE)",
+            "Revenue per Project",
+            "Debt-to-Equity Ratio"
+        ],
+        "operational_metrics": [
+            "Project Completion Rate",
+            "Customer Satisfaction Score",
+            "Material Waste Percentage",
+            "Labor Productivity"
+        ]
+    },
+    "Software and Computer Services": {
+        "financial_metrics": [
+            "Annual Recurring Revenue (ARR)",
+            "Gross Margin",
+            "Customer Acquisition Cost (CAC)",
+            "Net Revenue Retention (NRR)"
+        ],
+        "operational_metrics": [
+            "Daily Active Users (DAU)",
+            "User Engagement Rate",
+            "Bug Resolution Time",
+            "System Uptime"
+        ]
+    },
+    "Real Estate Investment and Services": {
+        "financial_metrics": [
+            "Net Operating Income (NOI)",
+            "Funds from Operations (FFO)",
+            "Occupancy Rate",
+            "Revenue per Available Room (RevPAR)"
+        ],
+        "operational_metrics": [
+            "Lease Renewal Rate",
+            "Average Lease Term",
+            "Property Maintenance Costs"
+        ]
+    },
+    "Finance and Credit Services": {
+        "financial_metrics": [
+            "Net Interest Margin (NIM)",
+            "Return on Assets (ROA)",
+            "Cost-to-Income Ratio",
+            "Loan-to-Deposit Ratio"
+        ],
+        "operational_metrics": [
+            "Non-Performing Loan Ratio",
+            "Customer Retention Rate",
+            "Branch Efficiency",
+            "Digital Transaction Volume"
+        ]
+    },
+    "Chemicals": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Return on Assets (ROA)",
+            "Revenue per Product Line",
+            "Cost of Goods Sold (COGS)"
+        ],
+        "operational_metrics": [
+            "Production Yield",
+            "Safety Incident Rate",
+            "Environmental Compliance",
+            "Supply Chain Efficiency"
+        ]
+    },
+    "General Industrials": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Return on Capital Employed (ROCE)",
+            "Revenue Growth Rate",
+            "Debt-to-Equity Ratio"
+        ],
+        "operational_metrics": [
+            "Production Efficiency",
+            "Innovation Rate",
+            "Customer Satisfaction Score",
+            "Workforce Utilization Rate"
+        ]
+    },
+    "Alternative Energy": {
+        "financial_metrics": [
+            "EBITDA Margin",
+            "Return on Assets (ROA)",
+            "Cost per Megawatt Hour",
+            "Revenue per Project"
+        ],
+        "operational_metrics": [
+            "Renewable Energy Percentage",
+            "Grid Reliability",
+            "Customer Satisfaction Score",
+            "System Losses"
+        ]
+    },
+    "Health Care Providers": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Revenue per Patient",
+            "Return on Assets (ROA)",
+            "Cost per Patient"
+        ],
+        "operational_metrics": [
+            "Patient Satisfaction Score",
+            "Readmission Rate",
+            "Staff-to-Patient Ratio",
+            "Bed Occupancy Rate"
+        ]
+    },
+    "Telecommunications Equipment": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Return on Assets (ROA)",
+            "Revenue per Product Line",
+            "Cost of Goods Sold (COGS)"
+        ],
+        "operational_metrics": [
+            "Product Defect Rate",
+            "Time to Market",
+            "Customer Satisfaction Score",
+            "Supplier Lead Time"
+        ]
+    },
+    "Retailers": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Inventory Turnover",
+            "Revenue per Square Foot",
+            "Return on Equity (ROE)"
+        ],
+        "operational_metrics": [
+            "Customer Satisfaction Score",
+            "Product Return Rate",
+            "Market Share",
+            "Store Foot Traffic"
+        ]
+    },
+    "Travel and Leisure": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Revenue per Available Room (RevPAR)",
+            "Return on Assets (ROA)",
+            "Cost per Customer"
+        ],
+        "operational_metrics": [
+            "Occupancy Rate",
+            "Customer Satisfaction Score",
+            "Average Length of Stay",
+            "Booking Conversion Rate"
+        ]
+    },
+    "Non-life Insurance": {
+        "financial_metrics": [
+            "Loss Ratio",
+            "Expense Ratio",
+            "Combined Ratio",
+            "Return on Equity (ROE)"
+        ],
+        "operational_metrics": [
+            "Policy Renewal Rate",
+            "Claims Processing Time",
+            "Customer Satisfaction Score",
+            "Market Share"
+        ]
+    },
+    "Industrial Metals and Mining": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Return on Capital Employed (ROCE)",
+            "Cost per Ton",
+            "Revenue per Mine"
+        ],
+        "operational_metrics": [
+            "Ore Grade",
+            "Safety Incident Rate",
+            "Mine Life",
+            "Environmental Compliance"
+        ]
+    },
+    "Media": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Revenue per Subscriber",
+            "Return on Assets (ROA)",
+            "Cost per Content"
+        ],
+        "operational_metrics": [
+            "Audience Reach",
+            "Content Production Rate",
+            "Customer Satisfaction Score",
+            "Market Share"
+        ]
+    },
+    "Automobiles and Parts": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Return on Assets (ROA)",
+            "Revenue per Vehicle",
+            "Cost of Goods Sold (COGS)"
+        ],
+        "operational_metrics": [
+            "Production Efficiency",
+            "Product Defect Rate",
+            "Customer Satisfaction Score",
+            "Innovation Rate"
+        ]
+    },
+    "Technology Hardware and Equipment": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Return on Assets (ROA)",
+            "Revenue per Product Line",
+            "Cost of Goods Sold (COGS)"
+        ],
+        "operational_metrics": [
+            "Product Defect Rate",
+            "Time to Market",
+            "Customer Satisfaction Score",
+            "Supplier Lead Time"
+        ]
+    },
+    "Consumer Services": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Revenue per Customer",
+            "Return on Assets (ROA)",
+            "Cost per Service"
+        ],
+        "operational_metrics": [
+            "Customer Satisfaction Score",
+            "Service Delivery Time",
+            "Market Share",
+            "Service Renewal Rate"
+        ]
+    },
+    "Gas, Water and Multi-utilities": {
+        "financial_metrics": [
+            "EBITDA Margin",
+            "Return on Assets (ROA)",
+            "Cost per Megawatt Hour",
+            "Revenue per Customer"
+        ],
+        "operational_metrics": [
+            "Grid Reliability",
+            "Customer Satisfaction Score",
+            "System Losses",
+            "Environmental Compliance"
+        ]
+    },
+    "Medical Equipment and Services": {
+        "financial_metrics": [
+            "Gross Margin",
+            "Return on Assets (ROA)",
+            "Revenue per Product Line",
+            "Cost of Goods Sold (COGS)"
+        ],
+        "operational_metrics": [
+            "Product Defect Rate",
+            "Time to Market",
+            "Customer Satisfaction Score",
+            "Supplier Lead Time"
+        ]
+    },
+    "Industrial Materials": {
+        "financial_metrics": [
+            "Operating Margin",
+            "Return on Capital Employed (ROCE)",
+            "Revenue Growth Rate",
+            "Debt-to-Equity Ratio"
+        ],
+        "operational_metrics": [
+            "Production Efficiency",
+            "Innovation Rate",
+            "Customer Satisfaction Score",
+            "Workforce Utilization Rate"
+        ]
+    },
+    "Life Insurance": {
+        "financial_metrics": [
+            "Loss Ratio",
+            "Expense Ratio",
+            "Combined Ratio",
+            "Return on Equity (ROE)"
+        ],
+        "operational_metrics": [
+            "Policy Renewal Rate",
+            "Claims Processing Time",
+            "Customer Satisfaction Score",
+            "Market Share"
+        ]
+    },
+    "Telecommunications Service Providers": {
+        "financial_metrics": [
+            "EBITDA Margin",
+            "Return on Assets (ROA)",
+            "Revenue per Subscriber",
+            "Cost per Subscriber"
+        ],
+        "operational_metrics": [
+            "Network Reliability",
+            "Customer Satisfaction Score",
+            "Churn Rate",
+            "Market Share"
+        ]
+    }
+}

@@ -1,0 +1,39 @@
+[
+    {
+        "messageId": 634429,
+        "title": "Q4 Results  (3 months ended 30 September 2024)",
+        "issuerSign": "BMK",
+        "numbAttachments": 1,
+        "publishedTime": "2024-12-12T07:01:00.000Z",
+        "attachments": [
+            {
+                "attachmentId": 294948,
+                "attachmentName": "Combined RNS Q4 FY24 final final.pdf"
+            }
+        ],
+        "downloadedFiles": [
+            "Combined RNS Q4 FY24 final final.pdf"
+        ]
+    },
+    {
+        "messageId": 634421,
+        "title": "Full Year Results for the Financial Year ended 30 September 2024",
+        "issuerSign": "BMK",
+        "numbAttachments": 2,
+        "publishedTime": "2024-12-12T07:00:00.000Z",
+        "attachments": [
+            {
+                "attachmentId": 294946,
+                "attachmentName": "FY24 presentation final final.pdf"
+            },
+            {
+                "attachmentId": 294949,
+                "attachmentName": "RNS full year combined 24 final final.pdf"
+            }
+        ],
+        "downloadedFiles": [
+            "FY24 presentation final final.pdf",
+            "RNS full year combined 24 final final.pdf"
+        ]
+    }
+]

@@ -226,9 +226,9 @@ def main():
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
     # Set up directory paths
-    downloads_dir = os.path.join(project_root, 'downloads', 'raw')       # Raw PDFs
-    processed_reports_dir = os.path.join(project_root, 'downloads', 'processed', 'reports')  # Processed PDFs
-    metadata_dir = os.path.join(project_root, 'downloads', 'processed', 'metadata')        # Metadata JSON files
+    downloads_dir = os.path.join(project_root, 'data', 'raw')       # Raw PDFs
+    processed_reports_dir = os.path.join(project_root, 'data', 'processed', 'reports')  # Processed PDFs
+    metadata_dir = os.path.join(project_root, 'data', 'processed', 'metadata')        # Metadata JSON files
 
     # Ensure directories exist
     os.makedirs(downloads_dir, exist_ok=True)
