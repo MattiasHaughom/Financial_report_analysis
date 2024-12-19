@@ -22,7 +22,7 @@ def run_weekly_tasks():
 def run_daily_tasks():
     """Run tasks that need to be executed daily."""
     logging.info("Running daily tasks...")
-    new_reports = report_scraping()
+    new_reports, new_text_announcements = report_scraping()
     if new_reports:
         logging.info("New reports found. Processing reports...")
         process_reports()

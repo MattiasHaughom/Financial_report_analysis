@@ -20,6 +20,8 @@ distribution = true
 
 
 [tool.pdm.scripts]
-m = "python -m app.processing.report_scraping"
+rs = "python -m app.processing.report_scraping"
 pr = "python -m app.processing.process_reports"
-mkm = "python -m main"
+ai = "python -m app.processing.ai_analysis"
+
+

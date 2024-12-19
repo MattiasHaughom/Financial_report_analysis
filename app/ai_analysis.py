@@ -24,7 +24,7 @@ setup_database()
 
 # Define the analysis agent
 analysis_agent = Agent(
-    model='openai:gpt-4o-mini',  # Specify your AI model
+    model='openai:gpt-4o-mini',  # The cheapest model for testing
     deps_type=AnalysisDependencies,
     result_type=AnalysisResult
     #retries=2
@@ -118,7 +118,7 @@ async def analyze_reports():
                 rerank=False,
                 top_n=5,
                 table_name='analysis',
-                metadata_filter={'company_id': company_id}
+                metadata_filter={'issuerSign': company_id}
             )
 
             additional_context_text = '\n'.join(
